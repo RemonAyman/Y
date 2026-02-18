@@ -1,57 +1,33 @@
-import { motion } from 'framer-motion';
-import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { useAudio } from '../context/AudioContext';
 
 const Screen2 = () => {
   const [time, setTime] = useState({ years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
-
-  // Toggle Play/Pause
-  const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
+  const [showPlaylist, setShowPlaylist] = useState(false);
+  
+  // Use Global Audio Context
+  const { isPlaying, togglePlay, currentSongIndex, playSong, playlist } = useAudio();
 
   useEffect(() => {
-    // START DATE: 27-12-2025 (Future date? Or past? User said "since 27-12-2025 we are together")
-    // If it's a future date, it should count DOWN. If it's a past date, it counts UP.
-    // User said "Start of our journey", implying it might be a past date in their context or a future milestone they are waiting for.
-    // However, usually "Since" implies past. But 2025 is future relative to now (2024/2026?).
-    // Wait, current time is 2026-02-18. So 27-12-2025 is in the PAST.
-    // So we calculate time ELAPSED since 27-12-2025.
-    
+    // START DATE: 27-12-2025
     const startDate = new Date('2025-12-27T00:00:00');
 
     const tick = () => {
       const now = new Date();
-      let diff = now - startDate; // Elapsed time
-
-      if (diff < 0) {
-        // If date is in future (e.g. system time is wrong or user meant future), count down
-        diff = startDate - now; 
-      }
+      let diff = now - startDate;
+      if (diff < 0) diff = startDate - now;
 
       const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
       diff -= years * (1000 * 60 * 60 * 24 * 365.25);
-      
       const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30.44));
       diff -= months * (1000 * 60 * 60 * 24 * 30.44);
-      
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       diff -= days * (1000 * 60 * 60 * 24);
-      
       const hours = Math.floor(diff / (1000 * 60 * 60));
       diff -= hours * (1000 * 60 * 60);
-      
       const minutes = Math.floor(diff / (1000 * 60));
       diff -= minutes * (1000 * 60);
-      
       const seconds = Math.floor(diff / 1000);
       
       setTime({ years, months, days, hours, minutes, seconds });
@@ -70,6 +46,11 @@ const Screen2 = () => {
     { value: time.minutes, label: 'دقيقة' },
     { value: time.seconds, label: 'ثانية' },
   ];
+
+  const handleSongSelect = (index) => {
+    playSong(index);
+    setShowPlaylist(false);
+  };
 
   return (
     <div className="screen">
@@ -109,17 +90,25 @@ const Screen2 = () => {
           ))}
         </div>
 
-        {/* Music Player */}
+        {/* Music Player UI - Controls ONLY */}
         <motion.div
           className="music-player"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
+          style={{ position: 'relative' }}
         >
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 700, fontSize: '15px' }}>نور عيني</div>
-            <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>الأغنية اللي بتوصفنا 🎵</div>
+          <div style={{ textAlign: 'right', flex: 1, marginRight: '16px' }}>
+            <div 
+              onClick={() => setShowPlaylist(!showPlaylist)}
+              style={{ fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}
+            >
+              {playlist[currentSongIndex].title} <span style={{ fontSize: '10px' }}>▼</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
+              {isPlaying ? 'جاري التشغيل... 🎵' : 'اضغط للتشغيل ▶'}
+            </div>
           </div>
           
           <div 
@@ -136,12 +125,52 @@ const Screen2 = () => {
                <span style={{ fontSize: '18px', marginLeft: '2px' }}>▶</span>
             )}
           </div>
-          
-          {/* Audio Element Hidden */}
-          <audio ref={audioRef} loop>
-            {/* Will need to update this src with actual file */}
-            <source src="/song.mp3" type="audio/mp3" />
-          </audio>
+
+          {/* Playlist Dropdown */}
+          <AnimatePresence>
+            {showPlaylist && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                style={{
+                  position: 'absolute',
+                  bottom: '100%',
+                  right: 0,
+                  left: 0,
+                  marginBottom: '10px',
+                  background: '#222',
+                  border: '1px solid #333',
+                  borderRadius: '16px',
+                  padding: '8px',
+                  zIndex: 20,
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                }}
+              >
+                {playlist.map((song, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handleSongSelect(idx)}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '8px',
+                      background: currentSongIndex === idx ? 'rgba(255, 59, 92, 0.1)' : 'transparent',
+                      color: currentSongIndex === idx ? '#ff3b5c' : '#ccc',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <span>{song.title}</span>
+                    {currentSongIndex === idx && <span>🎵</span>}
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>

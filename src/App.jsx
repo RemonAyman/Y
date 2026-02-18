@@ -38,30 +38,34 @@ const FloatingHearts = () => {
   );
 };
 
+import { AudioProvider } from './context/AudioContext';
+
 function App() {
   const [screen, setScreen] = useState(1);
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', background: '#050505' }}>
-      <FloatingHearts />
+    <AudioProvider>
+      <div style={{ position: 'relative', minHeight: '100vh', background: '#050505' }}>
+        <FloatingHearts />
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <AnimatePresence mode="wait">
-          {screen === 1 ? (
-            <motion.div key="s1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Screen1 onNext={() => setScreen(2)} />
-            </motion.div>
-          ) : (
-            <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Screen2 />
-              <Screen3 />
-              <VideoSection />
-              <Screen4 onReset={() => setScreen(1)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <AnimatePresence mode="wait">
+            {screen === 1 ? (
+              <motion.div key="s1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <Screen1 onNext={() => setScreen(2)} />
+              </motion.div>
+            ) : (
+              <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <Screen2 />
+                <Screen3 />
+                <VideoSection />
+                <Screen4 onReset={() => setScreen(1)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </AudioProvider>
   );
 }
 
