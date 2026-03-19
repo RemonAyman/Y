@@ -21,7 +21,7 @@ const VideoSection = () => {
         <p style={{ fontSize: '14px', color: '#999' }}>كل تفصيلة فيكي بتمثل لي دنيا</p>
       </motion.div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', width: '100%', maxWidth: '600px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
         {videos.map((vid, i) => (
           <motion.div
             key={i}
@@ -30,7 +30,7 @@ const VideoSection = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.2 }}
-            style={{ width: '100%' }}
+            style={{ width: '100%', maxWidth: '360px', margin: '0 auto' }}
           >
             <video 
               controls 
